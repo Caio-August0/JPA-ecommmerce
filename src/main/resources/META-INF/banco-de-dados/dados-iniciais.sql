@@ -1,0 +1,1 @@
+insert into Produto(id,nome,descricao,preco) values (1,"Kindle","Ótimo para leitura",499);
