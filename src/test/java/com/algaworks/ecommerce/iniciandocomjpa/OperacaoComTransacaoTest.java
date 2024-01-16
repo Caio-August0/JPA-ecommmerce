@@ -8,11 +8,13 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 
 public class OperacaoComTransacaoTest extends EntityManagerTest {
-/*Para realizarmos manipulações no Banco de Dados
-* Precisamos de uma transação. Transação é uma
-* unidade de execução que acessa e manipula dado
-* do Banco de Dados assegurando sua propideade ACID(Em um certo peíodo de tempo) */
-// Uamtrasação é sempre delimitada, precisa ser aberta e fechada
+/*Para realizarmos manipulações no Banco de Dados,
+* precisamos de uma transação. Transação é uma
+* UNIDADE DE EXECUÇÃO/LÓGICA DE TRABALHO (Onde se executa as instruções SQL que a compõem)
+* que acessa e manipula dado do Banco de Dados,
+* assegurando sua propideade ACID(Em um certo peíodo de tempo) */
+
+// Uma transação é sempre delimitada, precisa ser aberta(begin) e fechada(end)
 
     @Test
     public void inserirOPrimeiroObjeto() {
@@ -28,7 +30,7 @@ public class OperacaoComTransacaoTest extends EntityManagerTest {
         // a entidade representa algo que possivelmente está no Banco de Dados, porém a desconhece.
 
         // Esse "representa algo que possivelmente está no Banco de Dados"
-        // é o ID gerado pelo BD para aquela ENTIDADE, quando alteramos o ID com o setIt()
+        // é o ID gerado pelo BD para aquela instância de ENTIDADE, quando alteramos o ID com o setIt()
         // O EntityManeger a desconhce, pois os ID's não se correspondem. O ID da entitade
         // não é mesmo criado pelo BD para representa-la que está no Banco de Dados.
 
@@ -47,7 +49,7 @@ public class OperacaoComTransacaoTest extends EntityManagerTest {
         // entityManager.flush();
 
         /*NÃO É POSSÍVEL FAZER UMA FLUSH NO BANCO DE DADOS SEM UMA TRANSAÇÃO
-        *Força Entidade que está dentro da memória do Gerenciador
+        *Força instância de Entidade que está dentro da memória do Gerenciador
         * ir para o Banco de Dados*/
 
         entityManager.clear();// Limpamos a memória do EntityManager
@@ -58,11 +60,13 @@ public class OperacaoComTransacaoTest extends EntityManagerTest {
         * quando fazemos a confirmação o objeto foi buscado na
         * memória do Gerenciador e não no própio Banco de Dados */
 
-        Produto produtoVerificacao = entityManager.find(Produto.class, 2);
+        // Após a limpeza, ocorre o SQL no BD
+
+        Produto produtoVerificacao = entityManager.find(Produto.class, produto.getId());
         Assertions.assertEquals(produtoVerificacao,produto);
 
     }
-    @Test
+    @Test//Produto produto = new Produto();
     public void removerObjeto() {
 
         Produto produtoNaoPersistido = new Produto();
@@ -93,6 +97,58 @@ public class OperacaoComTransacaoTest extends EntityManagerTest {
 
         Produto produtoVerificado = entityManager.find(Produto.class,2);
         Assertions.assertNull(produtoVerificado);// Confirma se houve remoção
+    }
+    @Test
+    public void atualizarObjeto() {
+
+        /* O atributo DESCRIÇÃO terá seu valor atualizado para NULL
+        * pois atualizamos a instancia da Entidade com um dos seus
+        * atributos com valor de inicialização padrao.
+        *
+        * Quando criamos uma intância de Produto, seus atributos são iniciados
+        * com os valores de inicialização padrão, desse modo devemos preencher
+        * todos os atributos do atual objeto, para que quando passarmos o objeto
+        * como argumento para o Método MERGER, o estado da Instância da ENTIDADE no Banco de Dados
+        * não seja alterado/atualizado, para os valores de inicalização padrão,
+        * assim causando a perda de dados.
+        *
+        * Caso não queira modificar os valores dos atribuitos, deverá repeti-los
+
+        Nesse exemplo:
+
+        Produto produto = new Produto();
+
+        produto.setId(1);
+        produto.setNome("Kindle PaperWhite");
+        produto.setPreco(new BigDecimal(899.00));
+
+        */
+
+        
+        // SOLUÇÃO:
+
+        /*Agora não precisamos preencher todos os atributos, pois recebemos uma cópia do mesmo,
+        * agora, só  alteramos o que desejamos, pois o restante estará preenchido com as informações
+        * dada a ele, ao invés de valores de incialização padrão*/
+
+        Produto produto = entityManager.find(Produto.class, 1);
+
+        produto.setNome("Kindle PaperWhite");
+        produto.setPreco(new BigDecimal(899.00));
+
+
+        entityManager.getTransaction().begin();
+        entityManager.merge(produto);
+        entityManager.getTransaction().commit();
+
+        entityManager.clear();
+
+        Produto produtoAtualizado = entityManager.find(Produto.class, produto.getId());
+        Assertions.assertNotNull(produtoAtualizado);
+        Assertions.assertEquals("Kindle PaperWhite",produtoAtualizado.getNome());
+        //Assertions.assertEquals(produto.getNome(),produtoAtualizado.getNome());
+        // Como limpamos a memória o OBJETO PRODUTO, não se encontra mais em memória para
+        // realizarmos a comparação. Mesmo sendo
     }
 
    @Test
