@@ -24,8 +24,6 @@ public class EntityManagerTest {
    }
 
    @AfterEach // vai ser executado DEPOIS DE CADA UM dos teste
-   public void tearDown() {
-
-   }
+   public void tearDown() {}
 
 }
