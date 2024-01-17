@@ -99,7 +99,7 @@ public class OperacaoComTransacaoTest extends EntityManagerTest {
         Assertions.assertNull(produtoVerificado);// Confirma se houve remoção
     }
     @Test
-    public void atualizarObjeto() {
+    public void atualizarObjetoGerenciado1Forma() {
 
         /* O atributo DESCRIÇÃO terá seu valor atualizado para NULL
         * pois atualizamos a instancia da Entidade com um dos seus
@@ -120,18 +120,17 @@ public class OperacaoComTransacaoTest extends EntityManagerTest {
 
         produto.setId(1);
         produto.setNome("Kindle PaperWhite");
-        produto.setPreco(new BigDecimal(899.00));
+        produto.setPreco(new BigDecimal(899.00)); */
 
-        */
 
-        
         // SOLUÇÃO:
 
         /*Agora não precisamos preencher todos os atributos, pois recebemos uma cópia do mesmo,
         * agora, só  alteramos o que desejamos, pois o restante estará preenchido com as informações
         * dada a ele, ao invés de valores de incialização padrão*/
 
-        Produto produto = entityManager.find(Produto.class, 1);
+
+        Produto produto = entityManager.find(Produto.class, 1);// OBJETO GERENCIADO
 
         produto.setNome("Kindle PaperWhite");
         produto.setPreco(new BigDecimal(899.00));
@@ -143,12 +142,61 @@ public class OperacaoComTransacaoTest extends EntityManagerTest {
 
         entityManager.clear();
 
-        Produto produtoAtualizado = entityManager.find(Produto.class, produto.getId());
-        Assertions.assertNotNull(produtoAtualizado);
+        Produto produtoAtualizado = entityManager.getReference(Produto.class, produto.getId());
+        //Assertions.assertNotNull(produtoAtualizado); Não precisamos validar o OBJETO
+        // realmente existe não Base de dados, já que estamos trabalhando com um Objeto Gerenciado
+        // que foi buscado do BD, e que não foi estanciado
+        Assertions.assertEquals("Kindle PaperWhite",produtoAtualizado.getNome());
+
+        //Assertions.assertEquals(produto.getNome(),produtoAtualizado.getNome());
+        // Como limpamos a memória o OBJETO PRODUTO, não se encontra mais em memória para
+        // realizarmos a comparação. Mesmo sendo
+
+    }
+
+    @Test
+    public void atualizarObjetoGerenciado2Forma() {
+        Produto produto = entityManager.find(Produto.class, 1);// OBJETO GERENCIADO
+
+        entityManager.getTransaction().begin();
+        produto.setNome("Kindle PaperWhite");
+        produto.setPreco(new BigDecimal(899.00));
+        //entityManager.merge(produto);
+        entityManager.getTransaction().commit();
+        /*Pelo fato que CÓPIA DA INTÂNCIA DA ENTIDADE PRODUTO ser gerenciado
+        * pelo ENTITY MANAGER, ele realiza a verificação, e faz a atualização
+        * automaticamente sem o MÉTODO MERGER() */
+
+        entityManager.clear();
+
+        Produto produtoAtualizado = entityManager.getReference(Produto.class, produto.getId());
+        //Assertions.assertNotNull(produtoAtualizado); Não precisamos validar o OBJETO
+        // realmente existe não Base de dados, já que estamos trabalhando com um Objeto Gerenciado
+        // que foi buscado do BD, e que não foi estanciado
         Assertions.assertEquals("Kindle PaperWhite",produtoAtualizado.getNome());
         //Assertions.assertEquals(produto.getNome(),produtoAtualizado.getNome());
         // Como limpamos a memória o OBJETO PRODUTO, não se encontra mais em memória para
         // realizarmos a comparação. Mesmo sendo
+
+
+
+    }
+
+    @Test
+    public void atualizarObjetoNaoGerenciado() {
+        Produto produto = new Produto();
+
+        produto.setId(1);
+        produto.setNome("Kindle PaperWhite");
+        produto.setDescricao("Ótimo para leitura");
+        produto.setPreco(new BigDecimal(899.00));
+
+        entityManager.getTransaction().begin();
+        entityManager.merge(produto);
+        entityManager.getTransaction().commit();
+
+        produto = entityManager.getReference(Produto.class,produto.getId());
+        Assertions.assertNotNull(produto);
     }
 
    @Test
