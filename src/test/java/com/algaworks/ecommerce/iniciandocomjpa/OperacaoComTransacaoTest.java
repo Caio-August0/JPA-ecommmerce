@@ -233,7 +233,7 @@ public class OperacaoComTransacaoTest extends EntityManagerTest {
         produto.setPreco(new BigDecimal(899.00));
         //entityManager.merge(produto);
         entityManager.getTransaction().commit();
-        /*Pelo fato que CÓPIA DA INTÂNCIA DA ENTIDADE PRODUTO ser gerenciado
+        /*Pelo fato que CÓPIA DA INTÂNCIA DA ENTIDADE PRODUTO ser gerenciada
         * pelo ENTITY MANAGER, ele realiza a verificação, e faz a atualização
         * automaticamente sem o MÉTODO MERGER() */
 
@@ -267,6 +267,44 @@ public class OperacaoComTransacaoTest extends EntityManagerTest {
 
         produto = entityManager.getReference(Produto.class,produto.getId());
         Assertions.assertNotNull(produto);
+    }
+    @Test
+    public void desanexandoObjetos() {
+        Produto produto = entityManager.find(Produto.class, 1);
+
+        entityManager.detach(produto);// Desanexa na Memória
+
+        entityManager.getTransaction().begin();
+        produto.setNome("smartPhone");
+        System.out.println(produto.getNome());
+        entityManager.getTransaction().commit();
+
+        //Vai buscar na BAse de Dados, pois não existe em memória
+
+        /* A mescla(Mistura) de estado significa que as alterações feitas
+         * em um objeto gerenciado pelo EntityManager serão refletidas
+         * no banco de dados. Rastreia as mudanças nas entidades e as
+         * sincroniza com o banco de dados quando necessário*/
+
+        Produto produtoNaBaseDeDados = entityManager.find(Produto.class,1);
+        System.out.println("Pro" + produtoNaBaseDeDados.getNome());
+
+        /*A mesclagem de estados será realiza com após o MERGE()
+        * quando for rastreado*/
+        entityManager.getTransaction().begin();
+        entityManager.merge(produto);
+        entityManager.getTransaction().commit();
+
+        Produto produtoEmMemoria = entityManager.find(Produto.class,1);
+        System.out.println("Valor na memoria: " + produtoEmMemoria.getNome());
+
+        entityManager.clear();
+
+        produtoNaBaseDeDados = entityManager.find(Produto.class,1);
+        System.out.println("Valor na Base de Dados: " +produtoNaBaseDeDados.getNome());
+
+
+
     }
 
    @Test
