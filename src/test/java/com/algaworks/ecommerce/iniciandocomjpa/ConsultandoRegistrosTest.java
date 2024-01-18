@@ -33,7 +33,7 @@ public class ConsultandoRegistrosTest extends EntityManagerTest {
       *
        produto = entityManager.getReference(Produto.class,produto.getId());
        *
-       * "Obtenha uma instância, cujo estado pode ser obtido preguiçosamente"*/
+       *  "Obtenha uma instância, cujo estado pode ser obtido preguiçosamente"*/
 
       Produto produto = entityManager.find(Produto.class,1);
       Assertions.assertNotNull(produto);

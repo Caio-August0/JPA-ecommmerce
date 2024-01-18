@@ -66,6 +66,73 @@ public class OperacaoComTransacaoTest extends EntityManagerTest {
         Assertions.assertEquals(produtoVerificacao,produto);
 
     }
+    @Test
+    public void inserirObjetoComMerger() {
+
+        /*Devemos PREENCHER todos os campos por ser uma instância
+         * nova e nao se encontrar nem na memória do Entity Manager e
+         * nem na Base de Dados */
+
+        /* PRECISA usar o  MÉTODO SETID(). Mesmo com a estratégia de geração de chave
+        * que a cargo do Banco de Dados. No FIND(),não precisamos usar o MÉTODO SETID(),
+        * porém no MERGER() sim.
+        *
+        *
+        * O MÉTODO PERSIST() CRIA UMA NOVA INSTÂNCIA E PERSISTE como a responsabilidade da
+        * geração de chave fica para o Banco de Dados não precisamos definir o ID. Porém
+        *
+        *
+        * Isso ocorre pelo fato de que o Merge() pode  inserir instância se ela não
+        * existir na Base de Dados. Para isso, precisa fazer uma verificacao, usando o ID
+        * porém como estamos tentando inserir um nova instância teremos que definir o ID
+        *
+        *
+        *           Não sei ao certo
+        *  */
+
+        Produto produto = new Produto();
+
+        produto.setId(2);
+        produto.setNome("Camera Canon 2° Ed.");
+        produto.setDescricao("A melhor de todos os tempos");
+        produto.setPreco(new BigDecimal(350.91));
+
+       /*Podemos persistir dados com o MÉTODO MERGE()
+       * porém o OBJETO NÃO DEVE EXISTIR na Base de Dados
+       * CASO CONTRÁRIO será ATUALIZADO.
+       *
+       * PERSISTE = INSERT
+       * MERGE = UPDATE / IN SERT */
+        Produto produtoMerge;
+        entityManager.getTransaction().begin(); // Inicia
+        produtoMerge = entityManager.merge(produto);// MERGE retorna o PERSISTE NÃO retorna
+        produtoMerge.setPreco(new BigDecimal(570.45));
+        entityManager.getTransaction().commit();// Finaliza a Transação e Persistir
+
+        /* A variável de referência PRODUTOMERGE recebe uma CÓPIA DE INSTÂNCIA
+        * de Produto.Gerenciada pelo Entity usamos o PRODUTOMERGE para que
+        * possíveis mudanças possam ser identificadas, pois tal cópia está sendo
+        * gerenciada. Se o PRODUTOMERGE, não existisse iriamos realizar mudanças
+        * no OBJETO PRODUTO(não gerenciado), porém não seria idetificas já que OBJETO PRODUTO na
+        * memória do Entity é uma simples cópia, não estaríamos mexendo no OBJETO GERENCIADO.
+        *
+        * Assim, deveríamos chamar o MERGER() mais uma vez para a
+        *  */
+
+        /*Não precisamos usar MÉTODO MERGE() novamente para realizar a atualização
+        * pois o PRODUTOMERGE é uma CÓPIA de INSTÂNCIA retornada pelo MERGE()
+        * e gerenciada pelo EntityManger, no qual não precisamos usar o MÉTODO MERGE()
+        * novamente para fazer a atualização dos dados, pois o GERENCIADOR identifica as
+        * mudanças feita na CÓPIA de INSTÂNCIA RETORNADA e atualiza a instância na memória
+        * do Entity e na Base de Dados */
+
+        entityManager.clear();
+
+        Produto produtoVerificacao = entityManager.find(Produto.class, produto.getId());
+        Assertions.assertEquals(produtoVerificacao,produto);
+
+    }
+
     @Test//Produto produto = new Produto();
     public void removerObjeto() {
 
@@ -94,6 +161,9 @@ public class OperacaoComTransacaoTest extends EntityManagerTest {
         * do EntityManager antes da ASSERTION, pois o objeto será removido do banco de dados
         * automaticamente, também será removido da memória do EntityManager, já que não
         * faz sentido ele existir em memória e não no Banco */
+
+        /* Não usa-se o MÉTODO GETREFERENCE() para buscar instâncias de entidades inexistentes
+         * na Base de Dados, se não uma Exceção é lançada*/
 
         Produto produtoVerificado = entityManager.find(Produto.class,2);
         Assertions.assertNull(produtoVerificado);// Confirma se houve remoção
