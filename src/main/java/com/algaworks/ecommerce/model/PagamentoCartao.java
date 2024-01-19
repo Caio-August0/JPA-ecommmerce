@@ -6,26 +6,27 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.util.Objects;
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)// Apenas incluir como argumentos atributos explicítos
 @Entity
-public class Produto {
+@Table(name = "Pagamento_cartao")
+public class PagamentoCartao {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) //autoincremento
     @EqualsAndHashCode.Include// Irá incluir apenas o ID como argumentos para EQUALS E HASHCODE
     private Integer id;
 
-    @Column
-    private String nome;
+    @Column(name = "pedido_id")
+    private Integer pedidoId;
 
     @Column
-    private String descricao;
+    private Integer numero;
 
     @Column
-    private BigDecimal preco;
-
+    private StatusPagamento status;
 
 }
